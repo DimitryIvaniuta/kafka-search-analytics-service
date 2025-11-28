@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.8'
+}
+
+group = 'com.github.dimitryivaniuta.searchanalytics'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Import Spring Boot BOM via version catalog alias
+    implementation platform(libs.spring.boot.bom)
+
+    // Core implementation dependencies (no explicit versions here)
+    implementation libs.bundles.spring.impl
+
+    // Lombok
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+
+    // DB driver – version from catalog
+    runtimeOnly libs.postgresql
+
+    // Test stack
+    testImplementation libs.bundles.spring.test
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
