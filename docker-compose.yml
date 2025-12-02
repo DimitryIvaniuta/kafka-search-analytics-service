@@ -1,15 +1,15 @@
 # version: "3.9"
 services:
-  pg-oltp:
+  pg-sas:
     image: postgres:latest
     container_name: pg-sas
     #    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${SAS_DB_USER:-sas}
-      POSTGRES_PASSWORD: ${SAS_DB_PASSWORD:-sas}
-      POSTGRES_DB: ${OLTP_DB_NAME:-sas}
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME:-sas}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-sas}
+      POSTGRES_DB: ${SPRING_DATASOURCE_DBNAME:-sas}
     ports:
-      - "${OLTP_DB_PORT:-5443}:5432"
+      - "${SPRING_DATASOURCE_DBNAME:-5444}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 3s
