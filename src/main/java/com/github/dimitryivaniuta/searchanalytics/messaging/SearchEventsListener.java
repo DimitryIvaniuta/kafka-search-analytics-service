@@ -46,8 +46,8 @@ public class SearchEventsListener {
      *      - ack offset (so we don't loop forever on poison messages)
      */
     @KafkaListener(
-            topics = "${app.kafka.search-events-topic}",
-            containerFactory = "searchEventsKafkaListenerContainerFactory"
+            topics = "${app.kafka.search-events-topic}"
+//            containerFactory = "searchEventsKafkaListenerContainerFactory"
     )
     public void onMessage(SearchEventPayload payload,
                           @Header(KafkaHeaders.RECEIVED_KEY) String key,

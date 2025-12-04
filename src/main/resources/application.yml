@@ -23,20 +23,27 @@ spring:
     locations: classpath:db/migration
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9095}
     consumer:
-      group-id: ${KAFKA_CONSUMER_GROUP_ID}
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:search-analytics-cg}
       auto-offset-reset: earliest
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "com.github.dimitryivaniuta.searchanalytics.model"
+        spring.json.value.default.type: "com.github.dimitryivaniuta.searchanalytics.model.SearchEventPayload"
+        spring.json.use.type.headers: false
+
     producer:
       acks: all
       retries: 3
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    listener:
+      ack-mode: MANUAL
+      concurrency: 1
 
 app:
   kafka:

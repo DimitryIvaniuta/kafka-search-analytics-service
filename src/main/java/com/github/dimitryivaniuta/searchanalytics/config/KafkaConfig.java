@@ -77,23 +77,15 @@ public class KafkaConfig {
      */
     @Bean
     public ProducerFactory<String, String> jsonStringProducerFactory() {
-        Map<String, Object> producerProps = kafkaProperties.buildProducerProperties();
-
-        // Force plain String value serialization for this template
-        producerProps.put(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+        Map<String, Object> props = kafkaProperties.buildProducerProperties();
+        props.put(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                 StringSerializer.class);
-
-        return new DefaultKafkaProducerFactory<>(
-                producerProps,
-                new StringSerializer(),
-                new StringSerializer()
-        );
+        return new DefaultKafkaProducerFactory<>(props, new StringSerializer(), new StringSerializer());
     }
 
     @Bean
     public KafkaTemplate<String, String> jsonStringKafkaTemplate(
-            ProducerFactory<String, String> jsonStringProducerFactory
-    ) {
+            ProducerFactory<String, String> jsonStringProducerFactory) {
         return new KafkaTemplate<>(jsonStringProducerFactory);
     }
 
@@ -102,23 +94,15 @@ public class KafkaConfig {
      */
     @Bean
     public ProducerFactory<String, SearchEventPayload> searchEventProducerFactory() {
-        Map<String, Object> producerProps = kafkaProperties.buildProducerProperties();
-
-        // JsonSerializer for values
-        producerProps.put(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+        Map<String, Object> props = kafkaProperties.buildProducerProperties();
+        props.put(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                 JsonSerializer.class);
-
-        return new DefaultKafkaProducerFactory<>(
-                producerProps,
-                new StringSerializer(),
-                new JsonSerializer<>()
-        );
+        return new DefaultKafkaProducerFactory<>(props, new StringSerializer(), new JsonSerializer<>());
     }
 
     @Bean
     public KafkaTemplate<String, SearchEventPayload> searchEventKafkaTemplate(
-            ProducerFactory<String, SearchEventPayload> searchEventProducerFactory
-    ) {
+            ProducerFactory<String, SearchEventPayload> searchEventProducerFactory) {
         return new KafkaTemplate<>(searchEventProducerFactory);
     }
 }

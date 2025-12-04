@@ -27,3 +27,24 @@ CREATE INDEX IF NOT EXISTS idx_processing_errors_error_type
 
 CREATE INDEX IF NOT EXISTS idx_processing_errors_raw_event_id
     ON search_event_processing_errors (raw_event_id);
+
+SELECT s.name AS startpt,
+       m.name AS middlept,
+       e.name AS endpt
+FROM (SELECT hut1 AS from_hut, hut2 AS to_hut
+      FROM trails
+      UNION
+      SELECT hut2 AS from_hut, hut1 AS to_hut
+      FROM trails) AS e1
+         JOIN
+     (SELECT hut1 AS from_hut, hut2 AS to_hut
+      FROM trails
+      UNION
+      SELECT hut2 AS from_hut, hut1 AS to_hut
+      FROM trails) AS e2
+     ON e1.to_hut = e2.from_hut
+         JOIN mountain_huts s ON s.id = e1.from_hut
+         JOIN mountain_huts m ON m.id = e1.to_hut
+         JOIN mountain_huts e ON e.id = e2.to_hut
+WHERE s.altitude > m.altitude
+  AND m.altitude > e.altitude;
