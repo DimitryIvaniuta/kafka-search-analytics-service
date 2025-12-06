@@ -25,7 +25,6 @@ services:
     restart: unless-stopped
     ports:
       - "9095:9092"   # EXTERNAL (host)
-      - "9096:9093"   # CONTROLLER
       - "29095:29092" # INTERNAL (containers)
     environment:
       CLUSTER_ID: "k8iw6OLCQ4GgieIWuiz1eQ"
