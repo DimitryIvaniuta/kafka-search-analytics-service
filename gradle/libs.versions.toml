@@ -19,7 +19,7 @@ spring-kafka-test            = { module = "org.springframework.kafka:spring-kafk
 
 lombok                       = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 postgresql                   = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
-
+flyway-core                  = { module = "org.flywaydb:flyway-core" }
 testcontainers-junit         = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 testcontainers-core          = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-kafka         = { module = "org.testcontainers:kafka", version.ref = "testcontainers" }

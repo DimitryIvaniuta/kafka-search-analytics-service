@@ -1,32 +1,24 @@
 spring:
   application:
-    name: kafka-search-analytics-service
-
-  config:
-    import: "optional:file:.env[.properties]"
+    name: search-analytics-service-test
 
   main:
-    banner-mode: console
+    banner-mode: off
 
+  # Placeholder – real values come from BaseIntegrationTest / Testcontainers
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:postgresql://localhost:5445/search_analytics_test
+    username: test
+    password: test
     driver-class-name: org.postgresql.Driver
 
-  jdbc:
-    template:
-      fetch-size: 1000
-
   flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: false
+    enabled: false   # tests use manual Flyway in BaseIntegrationTest
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9095}
+    bootstrap-servers: localhost:9092  # overridden by DynamicPropertySource
     consumer:
-      group-id: ${KAFKA_CONSUMER_GROUP_ID:search-analytics-cg}
+      group-id: search-analytics-cg-test
       auto-offset-reset: earliest
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -35,19 +27,11 @@ spring:
         spring.json.trusted.packages: "com.github.dimitryivaniuta.searchanalytics.model"
         spring.json.value.default.type: "com.github.dimitryivaniuta.searchanalytics.model.SearchEventPayload"
         spring.json.use.type.headers: false
-
     producer:
       acks: all
       retries: 3
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
     listener:
       ack-mode: MANUAL
       concurrency: 1
-
-app:
-  kafka:
-    search-events-topic: ${SEARCH_EVENTS_TOPIC}
-    search-events-dlt-topic: ${SEARCH_EVENTS_DLT_TOPIC:search-events-dlt}
-    outbox-topic: ${SEARCH_OUTBOX_TOPIC:search-events-outbox}

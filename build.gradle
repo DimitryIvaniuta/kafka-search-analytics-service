@@ -17,12 +17,17 @@ repositories {
 }
 
 dependencies {
+    implementation 'commons-beanutils:commons-beanutils:1.11.0'
+    implementation 'org.apache.commons:commons-compress:1.28.0'
     // Import Spring Boot BOM via version catalog alias
     implementation platform(libs.spring.boot.bom)
 
     // Core implementation dependencies (no explicit versions here)
     implementation libs.bundles.spring.impl
 
+    // Flyway migration
+    implementation libs.flyway.core
+    implementation 'org.flywaydb:flyway-database-postgresql:11.18.0'
     // Lombok
     compileOnly libs.lombok
     annotationProcessor libs.lombok

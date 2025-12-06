@@ -1,5 +1,6 @@
 package com.github.dimitryivaniuta.searchanalytics.messaging;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dimitryivaniuta.searchanalytics.model.SearchEventPayload;
 import com.github.dimitryivaniuta.searchanalytics.service.DailyQueryStatService;
 import com.github.dimitryivaniuta.searchanalytics.service.EventProcessingErrorService;
@@ -31,6 +32,7 @@ public class SearchEventsListener {
     private final DailyQueryStatService dailyQueryStatService;
     private final EventProcessingErrorService errorService;
     private final DeadLetterProducer deadLetterProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Consumes SearchEventPayload messages from the main topic.
@@ -136,8 +138,7 @@ public class SearchEventsListener {
     private String safeToJson(SearchEventPayload payload) {
         try {
             // Mini inline mapper
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            return mapper.writeValueAsString(payload);
+            return objectMapper.writeValueAsString(payload);
         } catch (Exception e) {
             log.warn("Failed to serialize SearchEventPayload to JSON, storing toString() instead", e);
             return String.valueOf(payload);
