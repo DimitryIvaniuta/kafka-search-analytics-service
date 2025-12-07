@@ -50,11 +50,13 @@ public class RawSearchEventRepository {
                 error_message
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?)
+            ON CONFLICT (kafka_topic, kafka_partition, kafka_offset)
+            DO NOTHING
             """;
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        jdbcTemplate.update(con -> {
+        int updated = jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             int i = 1;
             ps.setString(i++, event.getEventKey());
@@ -71,6 +73,12 @@ public class RawSearchEventRepository {
             ps.setString(i, event.getErrorMessage());
             return ps;
         }, keyHolder);
+
+
+        // When DO NOTHING is triggered, updated == 0 and keyHolder has no key
+        if (updated == 0) {
+            return null; // already existed – caller can handle this if needed
+        }
 
         // ---- IMPORTANT: extract "id" from key map, not getKey() ----
         Map<String, Object> keys = keyHolder.getKeys();

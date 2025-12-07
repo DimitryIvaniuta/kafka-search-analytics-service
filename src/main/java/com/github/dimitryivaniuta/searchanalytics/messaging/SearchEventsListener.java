@@ -75,6 +75,10 @@ public class SearchEventsListener {
                     rawJson
             );
 
+            if (rawEventId != null) {
+                rawSearchEventService.markProcessed(rawEventId);
+            }
+
             // 2) Validate payload before aggregation
             if (!payload.isValidForAggregation()) {
                 String msg = "SearchEventPayload invalid for aggregation (missing query or occurredAt)";
