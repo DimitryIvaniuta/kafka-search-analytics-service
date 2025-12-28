@@ -14,10 +14,10 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * JDBC integration test (real Postgres via Testcontainers) for DailyQueryStatRepository.
+ * Verifies that daily_query_stats DDL + repository logic work end-to-end.
  */
 @Import(DailyQueryStatRepository.class)
-class DailyQueryStatRepositoryTest extends BaseJdbcIntegrationTest {
+class DailyQueryStatJdbcRepositoryIT extends BaseJdbcIntegrationTest {
 
     @Autowired
     private DailyQueryStatRepository repository;
@@ -26,8 +26,8 @@ class DailyQueryStatRepositoryTest extends BaseJdbcIntegrationTest {
     private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
-    void cleanDb() {
-        // isolate tests (same container DB for all tests in this class)
+    void clean() {
+        // isolate tests: avoid cross-test data pollution (counts/order changes)
         jdbcTemplate.execute("TRUNCATE TABLE daily_query_stats RESTART IDENTITY");
     }
 
@@ -35,20 +35,22 @@ class DailyQueryStatRepositoryTest extends BaseJdbcIntegrationTest {
     void incrementCount_upsertsAndAccumulates() {
         LocalDate day = LocalDate.of(2025, 12, 7);
 
+        // act – increment same query multiple times
         repository.incrementCount(day, "java");
         repository.incrementCount(day, "java");
         repository.incrementCount(day, "spring");
         repository.incrementCount(day, "java");
 
+        // assert – find by day + query
         DailyQueryStat javaStat = repository.findByDayAndQuery(day, "java").orElseThrow();
         DailyQueryStat springStat = repository.findByDayAndQuery(day, "spring").orElseThrow();
 
         assertThat(javaStat.getDay()).isEqualTo(day);
         assertThat(javaStat.getQuery()).isEqualTo("java");
         assertThat(javaStat.getCount()).isEqualTo(3);
-
         assertThat(springStat.getCount()).isEqualTo(1);
 
+        // assert – top for day
         List<DailyQueryStat> top = repository.findTopByDay(day, 10);
         assertThat(top).hasSize(2);
         assertThat(top.get(0).getQuery()).isEqualTo("java");
@@ -65,7 +67,6 @@ class DailyQueryStatRepositoryTest extends BaseJdbcIntegrationTest {
         repository.incrementCount(day1, "kafka");
         repository.incrementCount(day1, "kafka");
         repository.incrementCount(day2, "kafka");
-
         repository.incrementCount(day2, "spring");
         repository.incrementCount(day2, "spring");
 
@@ -75,10 +76,9 @@ class DailyQueryStatRepositoryTest extends BaseJdbcIntegrationTest {
         assertThat(agg).hasSize(2);
         assertThat(agg.get(0).getQuery()).isEqualTo("kafka");
         assertThat(agg.get(0).getCount()).isEqualTo(3);
-
         assertThat(agg.get(1).getQuery()).isEqualTo("spring");
         assertThat(agg.get(1).getCount()).isEqualTo(2);
-        
+
         // aggregated rows per your repository contract
         assertThat(agg.get(0).getId()).isNull();
         assertThat(agg.get(0).getDay()).isNull();

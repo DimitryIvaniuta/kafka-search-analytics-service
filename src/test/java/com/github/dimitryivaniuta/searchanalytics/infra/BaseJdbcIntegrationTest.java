@@ -9,7 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
@@ -27,12 +26,17 @@ import org.testcontainers.utility.DockerImageName;
 @ImportAutoConfiguration(FlywayAutoConfiguration.class)
 public abstract class BaseJdbcIntegrationTest {
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
-                    .withDatabaseName("search_analytics_test")
-                    .withUsername("search_analytics")
-                    .withPassword("search_analytics");
+    private static final PostgreSQLContainer<?> POSTGRES;
+
+    static {
+        POSTGRES = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
+                .withDatabaseName("search_analytics_test")
+                .withUsername("search_analytics")
+                .withPassword("search_analytics");
+
+        // Critical: start container before Spring reads properties
+        POSTGRES.start();
+    }
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry registry) {
@@ -45,7 +49,7 @@ public abstract class BaseJdbcIntegrationTest {
         registry.add("spring.flyway.enabled", () -> "true");
         registry.add("spring.flyway.locations", () -> "classpath:db/migration");
 
-        // Optional: keep tests deterministic (no accidental schema creation)
+        // keep tests deterministic (no accidental schema creation)
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
     }
 }
