@@ -9,21 +9,19 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 /**
  * Base for JPA slice tests:
- * - Boots only JPA slice (@DataJpaTest)
- * - Uses real Postgres via Testcontainers
- * - Runs Flyway migrations for schema (optional but recommended)
+ * - @DataJpaTest (JPA slice)
+ * - real Postgres via Testcontainers
+ * - Flyway migrations applied
  *
- * NOTE:
- *  - @DataJpaTest by default replaces datasource with embedded DB, so we disable that.
- *  - Flyway is not guaranteed to be included in slice tests, so we import FlywayAutoConfiguration.
+ * IMPORTANT:
+ * We start the container explicitly to avoid:
+ * "Mapped port can only be obtained after the container is started"
+ * during Spring's early DataSource condition evaluation.
  */
-@Testcontainers
 @DataJpaTest
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -31,12 +29,17 @@ import org.testcontainers.utility.DockerImageName;
 @ImportAutoConfiguration(FlywayAutoConfiguration.class)
 public abstract class BaseJpaIntegrationTest {
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
-                    .withDatabaseName("search_analytics_test")
-                    .withUsername("search_analytics")
-                    .withPassword("search_analytics");
+    private static final PostgreSQLContainer<?> POSTGRES;
+
+    static {
+        POSTGRES = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
+                .withDatabaseName("search_analytics_test")
+                .withUsername("search_analytics")
+                .withPassword("search_analytics");
+
+        // critical: start before Spring reads properties
+        POSTGRES.start();
+    }
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry registry) {
@@ -46,13 +49,11 @@ public abstract class BaseJpaIntegrationTest {
         registry.add("spring.datasource.password", POSTGRES::getPassword);
 
         // JPA – validate schema from Flyway; do NOT auto-create
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
-        registry.add("spring.jpa.open-in-view", () -> "false");
-
-        // Flyway – make sure migrations run for the slice test
         registry.add("spring.flyway.enabled", () -> "true");
         registry.add("spring.flyway.locations", () -> "classpath:db/migration");
-        // Optional:
-        // registry.add("spring.flyway.clean-disabled", () -> "true");
+
+        // Hibernate should not create schema (Flyway owns it)
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        registry.add("spring.jpa.open-in-view", () -> "false");
     }
 }
